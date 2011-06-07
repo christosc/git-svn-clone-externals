@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+unset CDPATH
 
 toplevel_directory="$(git rev-parse --show-cdup)"
 [ -n "$toplevel_directory" ] && { echo "please run from the toplevel directory"; exit 1; }
@@ -17,8 +18,11 @@ function call()
 function do_clone()
 {
 	test -d .git_externals || return 1
-	module=`echo $remote_url|sed 's,\(.*\)\(/trunk\|/branch.*\|/tag.*\),\1,'`
-	branch=`echo $remote_url|sed 's,\(.*\)\(/trunk\|/branch.*\|/tag.*\),\2,'|sed 's,^/,,'`
+	module=`echo $remote_url|sed 's,\(.*\)\(/trunk.*\|/branch.*\|/tag.*\),\1,'`
+	branch=`echo $remote_url|sed 's,\(.*\)\(/trunk.*\|/branch.*\|/tag.*\),\2,'|sed 's,^/,,'`
+        echo "module = " $module
+        echo "branch = " $branch
+
 	if [[ $branch = $remote_url ]]; then
 		branch=""
 	fi
@@ -26,6 +30,7 @@ function do_clone()
 		cd .git_externals
 		if [ -d "$local_directory" ]; then
 			(
+                                echo "local_directory = " $local_directory
 				cd "$local_directory"
 				call git svn fetch --all
 			)
@@ -37,19 +42,23 @@ function do_clone()
 			echo $brch|grep $branchpath >/dev/null 2>&1 && brch=$branchpath
 
 			if [ "$module" = "$remote_url" ]; then
+                                echo "then branch"
 				# URL does not contains any trunk, branches or tags part, so we dont need
 				# additional options for git-svn
 				call git svn clone "$revision" "$module" "$local_directory"
 			else
-				call git svn clone "$revision" "$module" -T trunk -b $brch -t $tags "$local_directory"
+                                echo "Else branch"
+				call git svn clone "$revision" "$module" -T $branch "$local_directory"
 			fi
 
 		fi
 		(
 			branch="$(echo ${branch}|sed 's,/$,,')"
 			if [ -n "$branch" ]; then
+                                echo -n "pwd = " 
+                                pwd
 				cd "$local_directory"
-				call git reset --hard $branch
+				call git reset --hard 
 			fi
 		)
 	)

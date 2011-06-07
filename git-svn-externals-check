@@ -8,7 +8,7 @@ for dir in *; do
        if [ $(echo $STATUS|grep -c "clean") -lt 1 -o \
 	    $(echo $UNPUSHED|grep -c "No unpushed") -lt 1 ]; then
 	   echo '>>>>>>>>>>>>>>>>' $dir '<<<<<<<<<<<<<<<<'
-	   git status
+	   git status $@
 	   git-svn-check-unpushed
 	   echo '----------------------------------------'
        else
